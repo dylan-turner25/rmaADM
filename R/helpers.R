@@ -22,6 +22,7 @@ locate_download_link <- function(year = 2012,
 
   # get the link with the matching year
   link <- links[grepl(year,links)]
+  link <- link[!grepl("test",link)]
 
   # apply some cleaning opperations
   link <- gsub("href=\"", "", link)
