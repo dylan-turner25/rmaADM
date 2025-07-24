@@ -75,3 +75,31 @@ piggyback::pb_upload(
 )
 
 
+# build ao expense subsidy percent
+ao_expense_subsidy_percent <- get_ice_data(years=2011:as.numeric(format(Sys.Date(),"%Y")),selected_ice="D00097_IceAOExpenseSubsidy")
+ao_expense_subsidy_percent[,commodity_year := reinsurance_year]
+ao_expense_subsidy_percent <- ao_expense_subsidy_percent[
+  ,
+  lapply(.SD, mean, na.rm = TRUE),
+  by     = c("commodity_year","insurance_plan_code","coverage_level_percent"),
+  .SDcols = c("ao_expense_subsidy_percent")]
+
+# Generate metadata key for factor metadata
+metadata_key <- paste0("ao_expense_subsidy_percent_", paste(range(ao_expense_subsidy_percent$commodity_year), collapse = "_"))
+
+# Save as parquet file using compress_adm2 function (handles type conversion automatically)
+file_name <- paste0("./data-raw", "/ao_expense_subsidy_percent.parquet")
+compress_adm2(ao_expense_subsidy_percent, file_name, metadata_key)
+
+#upload  .rds files into that release
+files <-  list.files("data-raw", "ao_expense_subsidy_percent.parquet$",
+           full.names = TRUE, recursive = TRUE)
+
+piggyback::pb_upload(
+  files,
+  repo = "dylan-turner25/rmaADM",
+  tag  = "v0.2.0",
+  overwrite = T
+)
+
+
